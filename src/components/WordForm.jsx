@@ -133,6 +133,7 @@ export default function WordForm({ onAdd, existingWords }) {
             onChange={e => handleEnglishChange(e.target.value)}
             placeholder="e.g. serendipity"
             disabled={submitting}
+            style={{ textTransform: 'capitalize' }}
             className={`w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-50 ${
               fieldErrors.english
                 ? 'border-2 border-red-400 dark:border-red-500'
@@ -184,6 +185,9 @@ export default function WordForm({ onAdd, existingWords }) {
           {fieldErrors.arabic && (
             <p className="mt-1 text-xs text-red-500 dark:text-red-400" dir="rtl">{fieldErrors.arabic}</p>
           )}
+          <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">
+            Auto-translate is a helper — double-check translations for accuracy before saving.
+          </p>
         </div>
       </div>
 
