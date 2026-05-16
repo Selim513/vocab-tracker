@@ -47,7 +47,8 @@ export default function WordForm({ onAdd, existingWords }) {
   }
 
   const handleEnglishChange = (value) => {
-    setEnglish(value)
+    const capitalized = value ? value.charAt(0).toUpperCase() + value.slice(1) : value
+    setEnglish(capitalized)
     if (value.trim() && hasArabic(value)) {
       setFieldErrors(prev => ({ ...prev, english: 'Arabic characters are not allowed here.' }))
     } else {
