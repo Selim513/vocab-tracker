@@ -17,7 +17,28 @@ export default function WordForm({ onAdd, existingWords }) {
   const [notes, setNotes] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [translating, setTranslating] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({ english: '', arabic: '' })
+
+  const handleAutoTranslate = async () => {
+    const word = english.trim()
+    if (!word) return
+
+    setTranslating(true)
+    try {
+      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|ar`)
+      const data = await res.json()
+      const translated = data?.responseData?.translatedText
+      if (translated) {
+        setArabic(translated)
+        setFieldErrors(prev => ({ ...prev, arabic: '' }))
+      }
+    } catch {
+      // silently fail — user can type manually
+    } finally {
+      setTranslating(false)
+    }
+  }
 
   const handleEnglishChange = (value) => {
     setEnglish(value)
@@ -116,9 +137,29 @@ export default function WordForm({ onAdd, existingWords }) {
           )}
         </div>
         <div>
-          <label htmlFor="arabic" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Arabic Translation *
-          </label>
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="arabic" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Arabic Translation *
+            </label>
+            <button
+              type="button"
+              onClick={handleAutoTranslate}
+              disabled={!english.trim() || translating || submitting}
+              className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {translating ? (
+                <>
+                  <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                  Translating...
+                </>
+              ) : (
+                <>Auto-Translate ✨</>
+              )}
+            </button>
+          </div>
           <input
             id="arabic"
             type="text"
