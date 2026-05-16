@@ -3,7 +3,25 @@ export default function WordCard({ word, onDelete }) {
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 flex flex-col gap-3 hover:shadow-md transition-colors">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 capitalize truncate">{word.english_word}</h3>
+          <div className="flex items-center gap-1.5">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 capitalize truncate">{word.english_word}</h3>
+            <button
+              onClick={() => {
+                const utterance = new SpeechSynthesisUtterance(word.english_word)
+                utterance.lang = 'en-GB'
+                window.speechSynthesis.cancel()
+                window.speechSynthesis.speak(utterance)
+              }}
+              className="shrink-0 p-1 text-gray-400 dark:text-gray-500 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-md transition cursor-pointer"
+              aria-label={`Pronounce ${word.english_word}`}
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M15.54 8.46a5 5 0 010 7.07" />
+                <path d="M19.07 4.93a10 10 0 010 14.14" />
+              </svg>
+            </button>
+          </div>
           <p className="text-xl text-indigo-600 dark:text-indigo-400 mt-1" dir="rtl">{word.arabic_translation}</p>
         </div>
         <button
