@@ -26,8 +26,14 @@ export default function WordForm({ onAdd, existingWords }) {
 
     setTranslating(true)
     try {
-      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|ar`)
+      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|ar&de=devahmedshaabanselem@gmail.com`)
       const data = await res.json()
+
+      if (data?.quotaFinished || data?.responseData?.translatedText?.includes('MYMEMORY WARNING: YOU USED ALL AVAILABLE FREE TRANSLATIONS FOR TODAY')) {
+        setError('Daily translation limit reached.')
+        return
+      }
+
       const translated = data?.responseData?.translatedText
       if (translated) {
         setArabic(translated)
