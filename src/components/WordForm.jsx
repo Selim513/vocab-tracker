@@ -20,13 +20,16 @@ export default function WordForm({ onAdd, existingWords }) {
   const [translating, setTranslating] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({ english: '', arabic: '' })
 
-  const handleAutoTranslate = async () => {
-    const word = english.trim()
-    if (!word) return
+  const handleAutoTranslate = async (direction) => {
+    const isEnToAr = direction === 'en-ar'
+    const source = isEnToAr ? english.trim() : arabic.trim()
+    if (!source) return
+
+    const langpair = isEnToAr ? 'en|ar' : 'ar|en'
 
     setTranslating(true)
     try {
-      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|ar&de=devahmedshaabanselem@gmail.com`)
+      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(source)}&langpair=${langpair}&de=devahmedshaabanselem@gmail.com`)
       const data = await res.json()
 
       if (data?.quotaFinished || data?.responseData?.translatedText?.includes('MYMEMORY WARNING: YOU USED ALL AVAILABLE FREE TRANSLATIONS FOR TODAY')) {
@@ -36,8 +39,14 @@ export default function WordForm({ onAdd, existingWords }) {
 
       const translated = data?.responseData?.translatedText
       if (translated) {
-        setArabic(translated)
-        setFieldErrors(prev => ({ ...prev, arabic: '' }))
+        if (isEnToAr) {
+          setArabic(translated)
+          setFieldErrors(prev => ({ ...prev, arabic: '' }))
+        } else {
+          const capitalized = translated.charAt(0).toUpperCase() + translated.slice(1)
+          setEnglish(capitalized)
+          setFieldErrors(prev => ({ ...prev, english: '' }))
+        }
       }
     } catch {
       // silently fail — user can type manually
@@ -123,9 +132,29 @@ export default function WordForm({ onAdd, existingWords }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div>
-          <label htmlFor="english" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            English Word *
-          </label>
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="english" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              English Word *
+            </label>
+            <button
+              type="button"
+              onClick={() => handleAutoTranslate('ar-en')}
+              disabled={!arabic.trim() || translating || submitting}
+              className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {translating ? (
+                <>
+                  <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                  Translating...
+                </>
+              ) : (
+                <>Auto-Translate ✨</>
+              )}
+            </button>
+          </div>
           <input
             id="english"
             type="text"
@@ -151,7 +180,7 @@ export default function WordForm({ onAdd, existingWords }) {
             </label>
             <button
               type="button"
-              onClick={handleAutoTranslate}
+              onClick={() => handleAutoTranslate('en-ar')}
               disabled={!english.trim() || translating || submitting}
               className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
