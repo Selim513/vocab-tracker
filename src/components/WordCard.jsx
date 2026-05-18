@@ -8,7 +8,7 @@ export default function WordCard({ word, onDelete }) {
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 capitalize truncate">{word.english_word}</h3>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 capitalize truncate" title={word.english_word}>{word.english_word}</h3>
             <button
               onClick={() => {
                 const utterance = new SpeechSynthesisUtterance(word.english_word)
@@ -26,7 +26,7 @@ export default function WordCard({ word, onDelete }) {
               </svg>
             </button>
           </div>
-          <p className="text-xl text-indigo-600 dark:text-indigo-400 mt-1" dir="rtl">{word.arabic_translation}</p>
+          <p className="text-xl text-indigo-600 dark:text-indigo-400 mt-1 truncate" dir="rtl" title={word.arabic_translation}>{word.arabic_translation}</p>
         </div>
         {confirming ? (
           <div className="flex items-center gap-1 shrink-0">
