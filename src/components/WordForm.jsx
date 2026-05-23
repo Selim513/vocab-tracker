@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const ARABIC_RE = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/
 const LATIN_RE = /[A-Za-z]/
@@ -11,7 +11,7 @@ function hasLatin(text) {
   return LATIN_RE.test(text)
 }
 
-export default function WordForm({ onAdd, existingWords }) {
+export default function WordForm({ onAdd, onEdit, editingWord, onCancelEdit, existingWords }) {
   const [english, setEnglish] = useState('')
   const [arabic, setArabic] = useState('')
   const [notes, setNotes] = useState('')
@@ -19,6 +19,16 @@ export default function WordForm({ onAdd, existingWords }) {
   const [submitting, setSubmitting] = useState(false)
   const [translating, setTranslating] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({ english: '', arabic: '' })
+
+  useEffect(() => {
+    if (editingWord) {
+      setEnglish(editingWord.english_word)
+      setArabic(editingWord.arabic_translation)
+      setNotes(editingWord.notes || '')
+      setError('')
+      setFieldErrors({ english: '', arabic: '' })
+    }
+  }, [editingWord])
 
   const handleAutoTranslate = async (direction) => {
     const isEnToAr = direction === 'en-ar'
@@ -96,13 +106,22 @@ export default function WordForm({ onAdd, existingWords }) {
       return
     }
 
-    if (existingWords.some(w => w.english_word.toLowerCase() === trimmedEnglish.toLowerCase())) {
+    const isEdit = !!editingWord
+
+    if (!isEdit && existingWords.some(w => w.english_word.toLowerCase() === trimmedEnglish.toLowerCase())) {
+      setError(`"${trimmedEnglish}" already exists in your vocabulary.`)
+      return
+    }
+
+    if (isEdit && existingWords.some(w => w.english_word.toLowerCase() === trimmedEnglish.toLowerCase() && w.id !== editingWord.id)) {
       setError(`"${trimmedEnglish}" already exists in your vocabulary.`)
       return
     }
 
     setSubmitting(true)
-    const result = await onAdd({ english: trimmedEnglish, arabic: trimmedArabic, notes: notes.trim() })
+    const result = isEdit
+      ? await onEdit(editingWord.id, { english: trimmedEnglish, arabic: trimmedArabic, notes: notes.trim() })
+      : await onAdd({ english: trimmedEnglish, arabic: trimmedArabic, notes: notes.trim() })
     setSubmitting(false)
 
     if (result?.duplicate) {
@@ -121,8 +140,21 @@ export default function WordForm({ onAdd, existingWords }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors">
-      <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Add New Word</h2>
+    <form onSubmit={handleSubmit} className={`rounded-xl shadow-sm border p-6 transition-colors ${editingWord ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'}`}>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+          {editingWord ? 'Edit Word' : 'Add New Word'}
+        </h2>
+        {editingWord && (
+          <button
+            type="button"
+            onClick={onCancelEdit}
+            className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition cursor-pointer"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
 
       {error && (
         <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-300 rounded-lg text-sm">
@@ -240,7 +272,7 @@ export default function WordForm({ onAdd, existingWords }) {
         disabled={submitting}
         className="w-full sm:w-auto px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 outline-none transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {submitting ? 'Adding...' : 'Add Word'}
+        {submitting ? (editingWord ? 'Saving...' : 'Adding...') : (editingWord ? 'Save Changes' : 'Add Word')}
       </button>
     </form>
   )

@@ -1,6 +1,6 @@
 import WordCard from './WordCard'
 
-export default function WordList({ words, onDelete, loading }) {
+export default function WordList({ words, onDelete, onEdit, loading }) {
   if (loading) {
     return (
       <div className="text-center py-16">
@@ -25,7 +25,7 @@ export default function WordList({ words, onDelete, loading }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {words.map(word => (
-        <WordCard key={word.id} word={word} onDelete={onDelete} />
+        <WordCard key={word.id} word={word} onDelete={onDelete} onEdit={onEdit} />
       ))}
     </div>
   )

@@ -10,6 +10,7 @@ export default function App() {
   const [words, setWords] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [editingWord, setEditingWord] = useState(null)
   const { theme, toggle: toggleTheme } = useTheme()
 
   const fetchWords = useCallback(async () => {
@@ -59,6 +60,39 @@ export default function App() {
     if (!error) setWords(prev => prev.filter(w => w.id !== id))
   }
 
+  const handleEdit = async (id, updates) => {
+    const { data, error } = await supabase
+      .from('words')
+      .update({
+        english_word: updates.english,
+        arabic_translation: updates.arabic,
+        notes: updates.notes || null,
+      })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      if (error.code === '23505') {
+        return { duplicate: true, word: updates.english }
+      }
+      return { error: error.message }
+    }
+
+    setWords(prev => prev.map(w => w.id === id ? data : w))
+    setEditingWord(null)
+    return { success: true }
+  }
+
+  const handleStartEdit = (word) => {
+    setEditingWord(word)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleCancelEdit = () => {
+    setEditingWord(null)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
@@ -75,7 +109,7 @@ export default function App() {
         </header>
 
         <div className="space-y-6">
-          <WordForm onAdd={handleAdd} existingWords={words} />
+          <WordForm onAdd={handleAdd} onEdit={handleEdit} editingWord={editingWord} onCancelEdit={handleCancelEdit} existingWords={words} />
 
           <div className="flex items-center gap-4">
             <div className="flex-1">
@@ -86,7 +120,7 @@ export default function App() {
             </span>
           </div>
 
-          <WordList words={filteredWords} onDelete={handleDelete} loading={loading} />
+          <WordList words={filteredWords} onDelete={handleDelete} onEdit={handleStartEdit} loading={loading} />
         </div>
       </div>
     </div>
